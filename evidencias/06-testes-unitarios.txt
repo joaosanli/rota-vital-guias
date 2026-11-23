@@ -1,0 +1,10 @@
+test_contador_cresce_no_mesmo_ambiente (tests.unit.test_handler.TestHandler.test_contador_cresce_no_mesmo_ambiente) ... ok
+test_evento_gerado_pelo_sam (tests.unit.test_handler.TestHandler.test_evento_gerado_pelo_sam) ... ok
+test_gera_guia_com_body_base64 (tests.unit.test_handler.TestHandler.test_gera_guia_com_body_base64) ... ok
+test_gera_guia_com_body_texto (tests.unit.test_handler.TestHandler.test_gera_guia_com_body_texto) ... ok
+test_sem_requisicao_id_retorna_400 (tests.unit.test_handler.TestHandler.test_sem_requisicao_id_retorna_400) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.003s
+
+OK

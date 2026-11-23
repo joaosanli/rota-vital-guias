@@ -1,0 +1,22 @@
+Starting Build use cache
+Starting Build inside a container
+Cache is invalid, running build and copying resources for following functions (HelloWorldFunction)
+Building codeuri: C:\Users\User\Downloads\projeto\rota-vital-guias\hello_world runtime: python3.12 architecture: x86_64 functions: HelloWorldFunction
+
+Fetching public.ecr.aws/sam/build-python3.12:latest-x86_64 container image......
+Mounting C:\Users\User\Downloads\projeto\rota-vital-guias\hello_world as /tmp/samcli/source:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: 9de85fed6cc139c9a96b908313e04b0f4b6054312485bff92ae01eee82617f55
+ Running PythonPipBuilder:ResolveDependencies
+ Running PythonPipBuilder:CopySource
+
+Build Succeeded
+
+Built Artifacts  : .aws-sam\build
+Built Template   : .aws-sam\build\template.yaml
+
+Commands you can use next
+=========================
+[*] Validate SAM template: sam validate
+[*] Invoke Function: sam local invoke
+[*] Test Function in the Cloud: sam sync --stack-name {{stack-name}} --watch
+[*] Deploy: sam deploy --guided

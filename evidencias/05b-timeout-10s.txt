@@ -1,0 +1,7 @@
+11:    Timeout: 10
+$ sam build --use-container
+Build Succeeded
+--- 15:37:55 ---
+$ curl -X POST http://127.0.0.1:3000/guias -H "Content-Type: application/json" -d '{"requisicaoId":"R-003","demorar":true}'
+{"guia": "G-R-003", "hospital": null, "bolsas": [], "invocacaoNesteAmbiente": 1}
+HTTP 201 em 9.530488s

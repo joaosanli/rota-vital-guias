@@ -1,0 +1,8 @@
+$ sam --version
+SAM CLI, version 1.174.0
+$ docker --version
+Docker version 29.9.1, build dfc520d
+$ docker run --rm --entrypoint python public.ecr.aws/lambda/python:3.12-rapid-x86_64 --version  # Python 3.12 do runtime Lambda usado no build e na execução
+Python 3.12.16
+$ python --version  # Python da máquina (só usado nos testes unitários)
+Python 3.14.7
