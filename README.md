@@ -183,7 +183,7 @@ Os arquivos `.txt` em `evidencias/` são a saída real dos comandos, capturada c
 | `05b-*` | timeout de 10 s: 201 em ~5 s |
 | `06-testes-unitarios` | testes unitários |
 
-Vídeo (até 3 min): _link do vídeo aqui_
+Vídeo (até 3 min): https://drive.google.com/file/d/1W6iBB3XkcgvdhDU5eaoahBxZdN66NkvT/view?usp=sharing
 
 ## Uso de IA
 
