@@ -1,0 +1,28 @@
+=== Invocação 1 (15:49:13) ===
+$ sam local invoke -e events/pedido.json
+No current session found, using default AWS::AccountId
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: 09305f26e8b422d4eb90c2e2fd57c6bfcf04a8aa207ce736552724258847b459
+START RequestId: c889dfd7-92ef-42ca-9d6f-e2aa652878c2 Version: $LATEST
+END RequestId: c889dfd7-92ef-42ca-9d6f-e2aa652878c2
+REPORT RequestId: c889dfd7-92ef-42ca-9d6f-e2aa652878c2	Init Duration: 0.31 ms	Duration: 2854.75 ms	Billed Duration: 2855 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+{"statusCode": 201, "headers": {"Content-Type": "application/json"}, "body": "{\"guia\":\"G-R-001\",\"requisicaoId\":\"R-001\",\"hospital\":\"H-Recife\",\"fornecedorId\":\"HEMOPE\",\"insumoId\":\"O-NEG\",\"quantidade\":1,\"bolsas\":[\"O-NEG-0142\"],\"coletaInicio\":\"2026-11-24T19:49:31.706428055Z\",\"coletaFim\":\"2026-11-24T21:49:31.706428055Z\",\"estado\":\"PREPARADO\",\"invocacaoNesteAmbiente\":1}"}
+Tempo total (relógio): 19.437 s
+
+=== Invocação 2 (15:49:33) ===
+$ sam local invoke -e events/pedido.json
+No current session found, using default AWS::AccountId
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: bf80bbb5c79ec6c2928a6111c1f6a120507e1687fe1aa6192c1270d0493f6374
+START RequestId: bac6981c-40f4-4701-8610-d96b079d0d64 Version: $LATEST
+END RequestId: bac6981c-40f4-4701-8610-d96b079d0d64
+REPORT RequestId: bac6981c-40f4-4701-8610-d96b079d0d64	Init Duration: 0.13 ms	Duration: 2425.28 ms	Billed Duration: 2426 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+{"statusCode": 201, "headers": {"Content-Type": "application/json"}, "body": "{\"guia\":\"G-R-001\",\"requisicaoId\":\"R-001\",\"hospital\":\"H-Recife\",\"fornecedorId\":\"HEMOPE\",\"insumoId\":\"O-NEG\",\"quantidade\":1,\"bolsas\":[\"O-NEG-0142\"],\"coletaInicio\":\"2026-11-24T19:49:49.175057220Z\",\"coletaFim\":\"2026-11-24T21:49:49.175057220Z\",\"estado\":\"PREPARADO\",\"invocacaoNesteAmbiente\":1}"}
+Tempo total (relógio): 17.094 s
+

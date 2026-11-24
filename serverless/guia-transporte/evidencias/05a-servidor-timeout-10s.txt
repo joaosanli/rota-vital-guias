@@ -1,0 +1,18 @@
+No current session found, using default AWS::AccountId
+Mounting GuiaTransporteFunction at http://127.0.0.1:3000/guias [POST]
+You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. If you used sam build before running local commands, you will need to re-run sam build for the changes to be picked up. You only need to restart SAM CLI if you update your AWS SAM template
+2026-11-24 15:51:42 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:3000
+2026-11-24 15:51:42 [33mPress CTRL+C to quit[0m
+2026-11-24 15:51:42 127.0.0.1 - - [24/Nov/2026 15:51:42] "[31m[1mGET / HTTP/1.1[0m" 403 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: b7ce4cbd11fc83af5007d26a0bd90e4b0562a6d3ad995352e948d9d592337917
+START RequestId: 4e20de53-5fee-4c8c-95cf-fc890c4078dc Version: $LATEST
+Function 'GuiaTransporteFunction' timed out after 10 seconds
+No response from invoke container for GuiaTransporteFunction
+Invalid lambda response received: Lambda response must be valid json
+2026-11-24 15:52:01 127.0.0.1 - - [24/Nov/2026 15:52:01] "[35m[1mPOST /guias HTTP/1.1[0m" 502 -

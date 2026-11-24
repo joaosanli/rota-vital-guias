@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>br.com.rotavital</groupId>
+    <artifactId>guia-transporte</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+    <name>Rota Vital - funcao serverless da guia de transporte</name>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- raiz do projeto Rota Vital (a API Spring); daqui reaproveito o dominio da Expedicao -->
+        <rotavital.raiz>${project.basedir}/../../..</rotavital.raiz>
+    </properties>
+
+    <profiles>
+        <!-- O sam build copia esta pasta para um diretorio temporario antes de rodar o Maven,
+             entao o caminho relativo acima deixa de existir. O ambiente.sh exporta o caminho absoluto. -->
+        <profile>
+            <id>raiz-por-variavel</id>
+            <activation>
+                <property><name>env.ROTA_VITAL_RAIZ</name></property>
+            </activation>
+            <properties>
+                <rotavital.raiz>${env.ROTA_VITAL_RAIZ}</rotavital.raiz>
+            </properties>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-events</artifactId>
+            <version>3.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>guia-transporte</finalName>
+        <plugins>
+            <!-- Compila tambem o codigo da API principal, mas so o dominio e a aplicacao da Expedicao
+                 (que nao dependem de Spring, garantido pelo ArquiteturaEmCamadasTest). -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>dominio-expedicao</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>add-source</goal></goals>
+                        <configuration>
+                            <sources><source>${rotavital.raiz}/src/main/java</source></sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <includes>
+                        <include>br/com/rotavital/expedicao/negocio/**/*.java</include>
+                        <include>br/com/rotavital/serverless/**/*.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

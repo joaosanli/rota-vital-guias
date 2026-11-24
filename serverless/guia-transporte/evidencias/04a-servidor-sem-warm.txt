@@ -1,0 +1,39 @@
+No current session found, using default AWS::AccountId
+Mounting GuiaTransporteFunction at http://127.0.0.1:3000/guias [POST]
+You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. If you used sam build before running local commands, you will need to re-run sam build for the changes to be picked up. You only need to restart SAM CLI if you update your AWS SAM template
+2026-11-24 15:50:18 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:3000
+2026-11-24 15:50:18 [33mPress CTRL+C to quit[0m
+2026-11-24 15:50:18 127.0.0.1 - - [24/Nov/2026 15:50:18] "[31m[1mGET / HTTP/1.1[0m" 403 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: e475bb083af8f63dc39a24a0777f9ab20f74b270aedce2dbcff6f426e82c2758
+START RequestId: c83236ff-56c7-401d-a9ba-49253153eeac Version: $LATEST
+END RequestId: c83236ff-56c7-401d-a9ba-49253153eeac
+REPORT RequestId: c83236ff-56c7-401d-a9ba-49253153eeac	Init Duration: 0.04 ms	Duration: 2369.98 ms	Billed Duration: 2370 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:50:25 127.0.0.1 - - [24/Nov/2026 15:50:25] "[35m[1mPOST /guias HTTP/1.1[0m" 201 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: 055d670d1b86559e6b039c9df988c2b8a3aed4959f2ddf50cddce7398ad7dca4
+START RequestId: 2b8e58b7-dae8-4e33-b14f-6d450daeda36 Version: $LATEST
+END RequestId: 2b8e58b7-dae8-4e33-b14f-6d450daeda36
+REPORT RequestId: 2b8e58b7-dae8-4e33-b14f-6d450daeda36	Init Duration: 0.06 ms	Duration: 2584.34 ms	Billed Duration: 2585 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:50:30 127.0.0.1 - - [24/Nov/2026 15:50:30] "[35m[1mPOST /guias HTTP/1.1[0m" 201 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: fc2c20b46edad554579fb7b7db0710cb44a51edad0b3ecf617c9f9a216c3c425
+START RequestId: 58f0505d-243a-440a-bd28-2b03e1da93c5 Version: $LATEST
+END RequestId: 58f0505d-243a-440a-bd28-2b03e1da93c5
+REPORT RequestId: 58f0505d-243a-440a-bd28-2b03e1da93c5	Init Duration: 0.07 ms	Duration: 3590.35 ms	Billed Duration: 3591 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+[ERROR] [1795546236978] LAMBDA_RUNTIME Failed to get next invocation. No Response from endpoint "127.0.0.1:9001/2018-06-01/runtime/invocation/next"
+2026-11-24 15:50:37 127.0.0.1 - - [24/Nov/2026 15:50:37] "[35m[1mPOST /guias HTTP/1.1[0m" 201 -

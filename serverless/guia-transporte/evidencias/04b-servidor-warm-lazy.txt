@@ -1,0 +1,46 @@
+No current session found, using default AWS::AccountId
+Mounting GuiaTransporteFunction at http://127.0.0.1:3000/guias [POST]
+You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. If you used sam build before running local commands, you will need to re-run sam build for the changes to be picked up. You only need to restart SAM CLI if you update your AWS SAM template
+2026-11-24 15:50:58 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:3000
+2026-11-24 15:50:58 [33mPress CTRL+C to quit[0m
+2026-11-24 15:50:58 127.0.0.1 - - [24/Nov/2026 15:50:58] "[31m[1mGET / HTTP/1.1[0m" 403 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: bbaf912b58b11b6fff8caa76be56a8bb62ac69992aa220f7fa18cb108583025f
+START RequestId: 05f9c438-5d45-4cfb-ac8f-bda7891910d1 Version: $LATEST
+END RequestId: 05f9c438-5d45-4cfb-ac8f-bda7891910d1
+REPORT RequestId: 05f9c438-5d45-4cfb-ac8f-bda7891910d1	Init Duration: 0.08 ms	Duration: 3532.73 ms	Billed Duration: 3533 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:51:07 127.0.0.1 - - [24/Nov/2026 15:51:07] "[35m[1mPOST /guias HTTP/1.1[0m" 201 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Lambda function 'GuiaTransporteFunction' is already running
+START RequestId: 133636b5-5f79-4086-9743-e8434ddbde0c Version: $LATEST
+END RequestId: 133636b5-5f79-4086-9743-e8434ddbde0c
+REPORT RequestId: 133636b5-5f79-4086-9743-e8434ddbde0c	Duration: 5.66 ms	Billed Duration: 6 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:51:08 127.0.0.1 - - [24/Nov/2026 15:51:08] "[35m[1mPOST /guias HTTP/1.1[0m" 201 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Lambda function 'GuiaTransporteFunction' is already running
+START RequestId: 5f71c4c8-4631-4e03-878a-5625060afdfd Version: $LATEST
+END RequestId: 5f71c4c8-4631-4e03-878a-5625060afdfd
+REPORT RequestId: 5f71c4c8-4631-4e03-878a-5625060afdfd	Duration: 3.62 ms	Billed Duration: 4 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:51:09 127.0.0.1 - - [24/Nov/2026 15:51:09] "[35m[1mPOST /guias HTTP/1.1[0m" 201 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Lambda function 'GuiaTransporteFunction' is already running
+START RequestId: b2a73f1f-2792-4cc5-aafc-2415c62c8fe8 Version: $LATEST
+END RequestId: b2a73f1f-2792-4cc5-aafc-2415c62c8fe8
+REPORT RequestId: b2a73f1f-2792-4cc5-aafc-2415c62c8fe8	Duration: 3.41 ms	Billed Duration: 4 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:51:10 127.0.0.1 - - [24/Nov/2026 15:51:10] "[31m[1mPOST /guias HTTP/1.1[0m" 400 -
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Lambda function 'GuiaTransporteFunction' is already running
+START RequestId: 7ec2d7ad-1b6b-4aa1-82b5-8a1b06c61e26 Version: $LATEST
+END RequestId: 7ec2d7ad-1b6b-4aa1-82b5-8a1b06c61e26
+REPORT RequestId: 7ec2d7ad-1b6b-4aa1-82b5-8a1b06c61e26	Duration: 3.05 ms	Billed Duration: 4 ms	Memory Size: 512 MB	Max Memory Used: 512 MB	
+
+2026-11-24 15:51:12 127.0.0.1 - - [24/Nov/2026 15:51:12] "[31m[1mPOST /guias HTTP/1.1[0m" 422 -

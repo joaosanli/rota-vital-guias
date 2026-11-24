@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Rota Vital - funcao serverless que gera a guia de transporte (contexto de Expedicao).
+
+Globals:
+  Function:
+    Timeout: 20       # Passo 5: com 10 s a chamada com demorar estoura; 20 e o padrao do sam init Java (ver README)
+    MemorySize: 512
+
+Resources:
+  GuiaTransporteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # o pom.xml desta pasta tambem compila o dominio da Expedicao da API principal (ver ambiente.sh)
+      CodeUri: GuiaTransporteFunction
+      Handler: br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      Events:
+        GerarGuia:
+          Type: Api
+          Properties:
+            Path: /guias
+            Method: post
+
+Outputs:
+  GuiaTransporteApi:
+    Description: "Endpoint do API Gateway (stage Prod) para gerar guias"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/guias/"
+  GuiaTransporteFunction:
+    Description: "ARN da funcao"
+    Value: !GetAtt GuiaTransporteFunction.Arn

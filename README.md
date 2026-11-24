@@ -1,194 +1,217 @@
-# Rota Vital · Guias de transporte (Serverless)
+# Rota Vital — Container, testes e deploy automatizados
 
-Atividade individual 1 da Unidade II de Infraestrutura de Software (ADS · CESAR School · 2026.2).
+**Curso:** Análise e Desenvolvimento de Sistemas — CESAR School  
+**Disciplina:** Infraestrutura de Software — Unidade 2 / 2026.2  
+**Professor:** Raoni Monteiro de Oliveira  
+**Integrantes:** João Lucas Santos Lira, Mariana Ferreira, Thaissa Fernandes e Priscila Maciel de Lima.
 
-Uma função serverless que recebe uma requisição do Rota Vital e gera a **guia de transporte** das bolsas de sangue. A função é acionada de duas formas: por **evento** (`sam local invoke`) e por **HTTP** (`sam local start-api` + `curl`). Com ela eu observei o cold start, o reaproveitamento do ambiente, o estado que não é garantido entre chamadas e o limite de tempo de execução.
+> A E1 está documentada. A esteira testa, constrói a imagem e solicita deploy no Render. Consulte as evidências abaixo.
 
-**Caminho escolhido: A (AWS SAM CLI local)**, sem conta na AWS.
+## Contexto do projeto
 
-## Estrutura
+O Rota Vital simula requisições de insumos hospitalares e procura fornecedores adequados
+considerando estoque e distância. Compara o processamento sequencial com threads de
+plataforma e virtuais em Java 21. Na E1, a API existente passou a ser executada com
+PostgreSQL via Docker Compose, sem modificar as regras de cruzamento.
 
-```
-rota-vital-guias/
-├── template.yaml            # SAM: função + API POST /guias, Timeout em Globals
-├── samconfig.toml           # config do SAM (warm_containers do start-api comentado, ver Passo 4)
-├── hello_world/app.py       # o handler (lambda_handler)
-├── events/pedido.json       # evento do API Gateway gerado com sam local generate-event
-├── scripts/chamar-api.sh    # faz as 3 chamadas curl do Passo 4
-├── scripts/gerar-prints.py  # transforma os logs de evidencias/*.txt em PNG
-├── tests/unit/              # testes unitários do handler (unittest)
-└── evidencias/              # saídas reais dos comandos (.txt) e prints (prints/*.png)
-```
+## Atividade individual 1 (Serverless): guia de transporte
 
-## Ambiente
+Função HTTP serverless (AWS SAM local, Java 21) que recebe uma requisição do Rota Vital e
+devolve a guia de transporte. Ela reaproveita o domínio de **Expedição** deste projeto
+(`PrepararTransferencia`, `PlanoTransferencia`, `JanelaColeta`) sem depender do Spring.
+Código, como rodar, evidências e respostas: [`serverless/guia-transporte/README.md`](serverless/guia-transporte/README.md).
 
-| Ferramenta | Versão |
-|---|---|
-| Windows 11 + Git Bash | |
-| Docker Desktop | 29.9.1 |
-| AWS SAM CLI | 1.174.0 |
-| Python do runtime (imagem `public.ecr.aws/lambda/python:3.12`) | 3.12.16 |
+## Integrantes
 
-Na minha máquina o Python instalado é o 3.14, e não o 3.12. Por isso usei `sam build --use-container`: o build roda dentro da imagem oficial do Lambda com Python 3.12, sem precisar instalar o 3.12 no Windows. Evidência: [`evidencias/00-versoes.txt`](evidencias/00-versoes.txt).
+| Integrante | Papel nesta entrega |
+| --- | --- |
+| João Lucas Santos Lira | Integrante do grupo — definir contribuição na apresentação |
+| Mariana Ferreira | Integrante do grupo — definir contribuição na apresentação |
+| Thaissa Fernandes | Integrante do grupo — definir contribuição na apresentação |
+| Priscila Maciel de Lima | Integrante do grupo — definir contribuição na apresentação |
 
-## Como rodar
+## Como rodar (E1)
 
-Pré-requisitos: Docker rodando e SAM CLI instalado. No Windows, usar o Git Bash.
+**Pré-requisitos:** Docker Desktop em execução (com Compose V2) ou Docker Engine + Compose plugin.
+Não é necessário instalar Java, Maven ou PostgreSQL na máquina.
 
-```bash
-# 1. build (dentro do container do Python 3.12)
-sam build --use-container
+1. Na primeira utilização, preparar as variáveis de ambiente:
 
-# 2. invocação por evento (Passo 3)
-sam local invoke -e events/pedido.json
+   ```bash
+   cp .env.example .env
+   ```
 
-# 3. HTTP (Passo 4): terminal 1
-sam local start-api
-#    terminal 2
-./scripts/chamar-api.sh
+   Edite `.env` e substitua `ALTERE_ESTA_SENHA_LOCAL` por uma senha **local**.
+   No PowerShell, utilize `Copy-Item .env.example .env`. O arquivo `.env` está no
+   `.gitignore` e nunca deve ser enviado ao repositório.
 
-# 4. reaproveitando o ambiente
-sam local start-api --warm-containers LAZY
-./scripts/chamar-api.sh
+2. Para **subir a aplicação e o banco com um único comando**:
 
-# 5. limite de tempo (Passo 5)
-curl -X POST http://127.0.0.1:3000/guias -H "Content-Type: application/json" \
-  -d '{"requisicaoId":"R-003","demorar":true}'
+   ```bash
+   docker compose up -d --build
+   ```
 
-# testes unitários (opcional, não precisa do Docker)
-python -m unittest discover -s tests/unit -t . -v
-```
+   O build é multi-stage: o Maven executa `clean verify` (incluindo os testes)
+   **antes** de criar a imagem final. Se algum teste falhar, o build é interrompido.
 
-> Dica que me custou um tempo: o projeto precisa ficar num caminho curto. Na primeira tentativa a pasta estava num caminho de quase 200 caracteres e o `sam build` falhou com `WinError 206` (o nome do arquivo é muito grande), por causa do limite de 260 caracteres do Windows.
+3. Conferir os serviços:
 
-## O que fiz e o que observei
+   ```bash
+   docker compose ps
+   curl http://localhost:8080/actuator/health
+   curl http://localhost:8080/api/info
+   curl -X POST 'http://localhost:8080/api/dados/gerar?requisicoes=1000'
+   curl http://localhost:8080/api/historico/geracoes
+   ```
 
-### Passo 2: projeto
+   A porta padrão é 8080. Se alterar `APP_PORT` em `.env`, ajuste a porta nas URLs.
+   Aguarde os dois contêineres ficarem `healthy`. O endpoint de saúde retorna
+   `{"status":"UP"}` quando a API e a conexão com o banco estão saudáveis.
+   No Windows PowerShell, `curl` pode ser um alias; use `curl.exe` ou `Invoke-RestMethod`.
 
-`sam init` com *Hello World Example*, `python3.12` e pacote `zip`. No `template.yaml` troquei `Path: /hello` por `/guias` e `Method: get` por `post`, e coloquei o código da atividade no `hello_world/app.py`. Também esvaziei o `requirements.txt` (o template traz `requests`, que a função não usa).
+4. Parar ou remover a aplicação:
 
-**Problema que encontrei (base64).** Na primeira invocação com o evento gerado, o código original da atividade quebrou:
+   ```bash
+   docker compose down           # para serviços; preserva volume e banco
+   docker compose up -d          # reabre mantendo historico de geracoes
+   # CUIDADO: docker compose down -v apaga os dados gravados
+   ```
 
-```
-[ERROR] JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-  File "/var/task/app.py", line 8, in lambda_handler
-    pedido = json.loads(event.get("body") or "{}")
-```
+Para validar e coletar saídas de terminal em Linux/macOS/WSL: `bash scripts/validar_e1.sh`.
+Os prints reais já obtidos estão em `docs/evidencias/` (ver seção **Evidências da E1**).
 
-O motivo: nesta versão do SAM CLI (1.174), o `sam local generate-event apigateway aws-proxy` grava o body **em base64**, com `"isBase64Encoded": true` (dá para conferir em `events/pedido.json`). O `json.loads` recebia `eyJyZXF1aXNpY2FvSWQi...` em vez do JSON. Criei a função `ler_body` no handler: ela decodifica o base64 quando `isBase64Encoded` é verdadeiro. O resto do código é igual ao do enunciado. O API Gateway de verdade também pode mandar o body em base64, então a correção faz sentido fora do ambiente local. O teste `test_gera_guia_com_body_base64` cobre esse caso.
+### Persistência implementada e verificada localmente
 
-### Passo 3: invocação com evento
+O Rota Vital usa **duas camadas de dados com finalidades distintas**:
 
-Evidência: [`evidencias/02-invoke-evento.txt`](evidencias/02-invoke-evento.txt)
+- **Snapshots em memória:** os arrays gerados pela semente fixa continuam em memória,
+  evitando que acesso a disco distorça os benchmarks de concorrência do PI.
+- **PostgreSQL:** o `POST /api/dados/gerar` grava metadados (quantidade de requisições,
+  hospitais, insumos, semente e uso de cache) na tabela `historico_geracoes`.
+  Consulte `GET /api/historico/geracoes` para ver os 20 registros mais recentes.
+  Esses metadados sobrevivem ao reinício por causa do volume `postgres_data`.
 
-| Invocação | Tempo total (relógio) | `Duration` no REPORT | Resposta |
-|---|---|---|---|
-| 1ª | 8,49 s | 62,01 ms | 201, `invocacaoNesteAmbiente: 1` |
-| 2ª | 8,13 s | 61,14 ms | 201, `invocacaoNesteAmbiente: 1` |
+O esquema é criado automaticamente por `src/main/resources/schema.sql`, de forma
+idempotente. O banco não é publicado em uma porta da máquina; somente a API é acessível.
 
-A primeira invocação de todas (a que deu o erro de base64, antes da correção) levou **39 s**, porque o Docker ainda estava preparando a imagem do runtime e o primeiro container. Depois disso as duas ficaram parecidas (~8 s). O `sam local invoke` **cria um container novo a cada execução**, então as duas foram cold start. Quase todo o tempo é para subir o container; o handler em si leva só ~60 ms. A diferença entre frio e quente aparece com clareza no Passo 4.
+## Endpoints do Rota Vital
 
-Observação: o `Init Duration` do emulador local aparece como ~0,05 ms, o que não é realista. O emulador (Runtime Interface Emulator) não mede o Init como o Lambda real. Por isso usei o tempo de relógio.
+| Método | Rota | Finalidade |
+| --- | --- | --- |
+| GET | `/actuator/health` | Healthcheck da API e do banco |
+| GET | `/api/info` | Informações da JVM e das bases em cache |
+| POST | `/api/dados/gerar?requisicoes=1000` | Gerar snapshot e registrar metadados no PostgreSQL |
+| GET | `/api/historico/geracoes` | Consultar últimos 20 registros persistidos |
+| GET | `/api/cruzamento?modo=sequencial&requisicoes=1000` | Cruzamento sequencial |
+| GET | `/api/cruzamento?modo=plataforma&threads=4&requisicoes=1000` | Cruzamento com threads de plataforma |
+| GET | `/api/cruzamento?modo=virtual&threads=4&requisicoes=1000` | Cruzamento com threads virtuais |
 
-### Passo 4: HTTP com `start-api`
-
-**Surpresa:** na primeira rodada sem flag, o contador foi 1, 2, 3, como se o ambiente estivesse sendo reaproveitado. Fui investigar e achei a causa: o `samconfig.toml` gerado pelo `sam init` já vem com
-
-```toml
-[default.local_start_api.parameters]
-warm_containers = "EAGER"
-```
-
-Então o `sam local start-api` "sem flag" estava, na prática, rodando com EAGER (o log mostra `Initializing the lambda functions containers` logo na subida). Guardei essa rodada como [`evidencias/04-0-curl-samconfig-eager-padrao.txt`](evidencias/04-0-curl-samconfig-eager-padrao.txt), comentei essas linhas no `samconfig.toml` e refiz o experimento:
-
-| Modo | Chamada 1 | Chamada 2 | Chamada 3 | `invocacaoNesteAmbiente` |
-|---|---|---|---|---|
-| Sem warm containers ([04a](evidencias/04a-curl-sem-warm.txt)) | 5,52 s | 2,10 s | 2,13 s | **1, 1, 1** |
-| `--warm-containers LAZY` ([04b](evidencias/04b-curl-warm-lazy.txt)) | 3,76 s | 1,05 s | 1,08 s | **1, 2, 3** |
-| EAGER (padrão do samconfig, [04-0](evidencias/04-0-curl-samconfig-eager-padrao.txt)) | 1,23 s | 1,04 s | 1,10 s | **1, 2, 3** |
-
-* **Sem warm:** cada requisição ganha um container novo. A variável global `contador` sempre começa do zero e a resposta é sempre 1. Toda chamada paga o cold start.
-* **LAZY:** o container só é criado na primeira requisição (por isso ela é mais lenta) e depois é reaproveitado. O `contador` continua vivo entre as chamadas: 1, 2, 3.
-* **EAGER:** o container é criado já na subida do servidor, então nem a primeira chamada paga o cold start.
-
-Também testei a validação: sem `requisicaoId` a função responde **400** com `{"erro": "requisicaoId obrigatório"}` (no fim do arquivo 04-0).
-
-### Passo 5: limite de tempo
-
-| Timeout no template | Resultado | Evidência |
-|---|---|---|
-| 3 s | **HTTP 502** `{"message":"Internal server error"}`. Log: `Function 'HelloWorldFunction' timed out after 3 seconds` | [05a](evidencias/05a-timeout-3s.txt), [log](evidencias/05a-servidor-timeout-3s.txt) |
-| 10 s (após `sam build`) | **HTTP 201**, guia `G-R-003`. REPORT: `Duration: 5062.58 ms` | [05b](evidencias/05b-timeout-10s.txt), [log](evidencias/05b-servidor-timeout-10s.txt) |
-
-Com 3 s a plataforma matou a execução no meio do `time.sleep(5)`, e o API Gateway local devolveu 502 para o cliente. A guia nunca foi gerada. Com 10 s a função terminou em ~5 s e respondeu normalmente. O `Billed Duration` foi de 5063 ms: na nuvem, esse tempo parado também seria cobrado.
-
-## Respostas
-
-**1. Por que a primeira invocação demorou mais que a segunda? O que acontece na fase de Init?**
-
-Na primeira invocação não existe ambiente pronto, então a plataforma precisa criar um do zero. Esse é o *cold start*. Na fase de **Init**, o Lambda: (1) cria o ambiente de execução isolado (na AWS é uma microVM Firecracker; aqui é um container Docker); (2) baixa e monta o código da função; (3) inicia as extensões e o runtime (o interpretador Python 3.12); (4) roda o código que está **fora** do handler, ou seja, os `import` e as variáveis globais como `contador = 0`. Só depois disso vem a fase de **Invoke**, que chama o `lambda_handler`. Se o ambiente fica "quente", a próxima chamada pula o Init inteiro e vai direto para o Invoke.
-
-No meu teste isso apareceu assim: a primeira execução de todas levou 39 s (preparar a imagem e o primeiro container), e no `start-api` com LAZY a 1ª chamada levou 3,76 s e as seguintes ~1 s. Com o `sam local invoke` as duas medições deram parecido (8,5 s e 8,1 s), porque esse comando sempre cria um container novo: as duas foram frias.
-
-**2. O que o campo `invocacaoNesteAmbiente` mostrou com e sem `--warm-containers`? O que isso diz sobre guardar estado numa variável global?**
-
-Sem warm containers foi sempre **1**, porque cada requisição caiu num ambiente novo e o `contador` foi recriado com 0. Com `--warm-containers LAZY` (e também com EAGER) foi **1, 2, 3**: o mesmo ambiente atendeu as três chamadas e a variável global sobreviveu entre elas.
-
-Conclusão: variável global **não é lugar para guardar estado**. Ela só sobrevive enquanto a plataforma resolve manter aquele ambiente. A plataforma pode descartá-lo a qualquer momento, e em produção várias cópias rodam em paralelo, cada uma com o seu `contador`. Se o Rota Vital precisasse numerar guias assim, sairiam números repetidos e fora de ordem. Estado tem que ir para um serviço externo (banco, DynamoDB, Redis, S3). A global serve para **cache** do que é caro de criar e pode ser refeito, como uma conexão com o banco ou um cliente do SDK, aproveitando o reuso quando ele acontece.
-
-**3. O que aconteceu com `demorar = true`? Qual é o tempo máximo de uma execução no Lambda, e o que fazer com um trabalho mais longo?**
-
-Com Timeout de 3 s, a função foi interrompida em 3 s (`timed out after 3 seconds`), o cliente recebeu **HTTP 502** e a guia não foi gerada. Quando aumentei o Timeout para 10 s, a mesma chamada respondeu 201 em ~5 s.
-
-O máximo no Lambda é **900 segundos (15 minutos)**. Para um trabalho maior que isso (ou que não precisa segurar o cliente esperando), dá para: quebrar o trabalho em partes menores e processá-las de forma assíncrona com uma fila (SQS), em que cada mensagem é uma execução curta; orquestrar as etapas com o **Step Functions**; ou rodar o processamento num container sem esse limite (**ECS/Fargate** ou **AWS Batch**). Também ajuda responder logo ao cliente (202 Accepted) e avisar quando terminar. E não adianta só aumentar o Timeout: o tempo parado também é cobrado.
-
-**4. Quanto custa um milhão de execuções com 128 MB e 100 ms (us-east-1)?**
-
-```
-Requisições:  1.000.000 × (US$ 0,20 / 1.000.000)          = US$ 0,20
-
-Computação:   128 MB = 128 / 1024 GB                       = 0,125 GB
-              0,125 GB × 0,1 s                             = 0,0125 GB-s por execução
-              0,0125 GB-s × 1.000.000 execuções            = 12.500 GB-s
-              12.500 GB-s × US$ 0,0000166667               = US$ 0,2083
-
-Total:        US$ 0,20 + US$ 0,2083                        ≈ US$ 0,41
-```
-
-Um milhão de guias custaria cerca de **41 centavos de dólar**. E isso ainda caberia na faixa sempre gratuita (1 milhão de requisições e 400 mil GB-s por mês), então na prática sairia de graça. Detalhe: no meu teste a função levou ~60 ms, e o Lambda cobra por milissegundo, então o custo real seria um pouco menor. Já com `demorar: true` (5 s) a parte de computação ficaria 50 vezes maior: 0,125 × 5 × 1.000.000 = 625.000 GB-s ≈ US$ 10,42.
-
-**5. Em que parte do Rota Vital uma função assim faria sentido, e em qual não faria?**
-
-*Faz sentido* em tarefas curtas, sem estado e disparadas por evento, com tráfego irregular: gerar a guia de transporte quando uma requisição é aprovada (como neste exemplo), gerar o PDF ou o QR code da guia, mandar notificações (e-mail, SMS, push) para o hospital e para o motorista, validar e registrar o recebimento quando a bolsa é entregue, ou rodar uma tarefa agendada, como alertar bolsas perto do vencimento. São coisas que acontecem algumas vezes por dia e às vezes em pico (uma emergência gera várias requisições de uma vez). Pagar por execução e escalar sozinho encaixa bem.
-
-*Não faz sentido* no rastreamento em tempo real do transporte, que precisa de conexão aberta (WebSocket) recebendo posição a cada poucos segundos durante toda a viagem. Também não faz sentido no controle de estoque das bolsas, que precisa de consistência forte e transações, e onde o cold start numa urgência é um risco. Nem para cálculos longos de rotas e otimização que passem de 15 minutos. Para a API principal, que tem tráfego constante e mantém pool de conexões com o PostgreSQL, um serviço sempre ligado (como o container Java que já temos no projeto) tende a ser mais previsível e, com tráfego alto e constante, até mais barato.
+> O modo `inseguro` existente é apenas didático (race condition). Não é usado no fluxo de produção.
 
 ## Testes
 
-`python -m unittest discover -s tests/unit -t . -v`: 5 testes passando (body em texto, body em base64, falta de `requisicaoId` → 400, contador no mesmo ambiente e o próprio `events/pedido.json`). Evidência: [`evidencias/06-testes-unitarios.txt`](evidencias/06-testes-unitarios.txt).
+O projeto já possuía `MotorCruzamentoTest`, com testes de equivalência de resultados
+entre processamento sequencial, plataforma e virtual, e verificação de particionamento.
+A E1 **reutiliza esses testes**, executados durante `mvn clean verify` no primeiro
+estágio do Dockerfile. Para rodar apenas os testes, com JDK 21 disponível:
 
-## Evidências
+```bash
+./mvnw test
+# Windows: .\mvnw.cmd test
+```
 
-Os arquivos `.txt` em `evidencias/` são a saída real dos comandos, capturada com `tee` no Git Bash. Os PNG em `evidencias/prints/` foram gerados a partir desses `.txt` com `scripts/gerar-prints.py`, só para facilitar a leitura.
+**E2:** testes HTTP/PostgreSQL (`ApiIT`) e um ciclo red → green real (`docs/evidencias/tdd-red.log` → `testes-green.log`); story map e alcance do TDD em `docs/ENTREGAS_E2_E3.md`. O projeto original não é declarado como TDD retroativo.
 
-| Arquivo | O que mostra |
-|---|---|
-| `00-versoes` | versões do SAM CLI, Docker e Python |
-| `01-sam-build` | `sam build --use-container` com sucesso |
-| `02-invoke-evento` | duas invocações com evento e tempos |
-| `04-0-*` | `start-api` com o EAGER que vem no samconfig + chamada sem `requisicaoId` (400) |
-| `04a-*` | `start-api` sem warm containers: 1, 1, 1 |
-| `04b-*` | `start-api --warm-containers LAZY`: 1, 2, 3 |
-| `05a-*` | timeout de 3 s: 502 e `timed out after 3 seconds` |
-| `05b-*` | timeout de 10 s: 201 em ~5 s |
-| `06-testes-unitarios` | testes unitários |
+## Pipeline e deploy
 
-Vídeo (até 3 min): https://drive.google.com/file/d/1W6iBB3XkcgvdhDU5eaoahBxZdN66NkvT/view?usp=sharing
+| Entrega | Situação | Escopo |
+| --- | --- | --- |
+| E1 | Concluída | Build multi-stage, Compose, PostgreSQL, healthcheck, configuração e evidências |
+| E2 | TDD demonstrado para as validações novas | Story map, testes unitários + HTTP/PostgreSQL, ciclo TDD red → green; ver [docs/ENTREGAS_E2_E3.md](docs/ENTREGAS_E2_E3.md) |
+| E3 | Solicitação de deploy demonstrada | Workflow `ci.yml` (Testes → Imagem → Deploy) + Render via Deploy Hook |
+
+**Fluxo:** push/PR → job *Testes* (Maven + PostgreSQL de serviço) → job *Imagem* (`docker build`) → job *Solicitar deploy* (somente `push` na `main`, ambiente `production`, secret `RENDER_DEPLOY_HOOK_URL`). Com qualquer teste vermelho, imagem e deploy nem iniciam. O Auto Deploy do Render fica desligado; só a esteira libera o deploy.
+
+**Repositório do grupo:** https://github.com/joaosanli/rota-vital-threads  
+**URL pública:** https://rota-vital-api-udun.onrender.com — health: https://rota-vital-api-udun.onrender.com/actuator/health
+
+### Evidências da esteira
+
+| Evidência | Link |
+| --- | --- |
+| Execução **vermelha** (expectativa de teste invertida; imagem e deploy não rodam) | [run 39520721359](https://github.com/joaosanli/rota-vital-threads/actions/runs/39520721359) |
+| Execução **verde** após corrigir o teste (PR) | [run 39520836800](https://github.com/joaosanli/rota-vital-threads/actions/runs/39520836800) |
+| Merge na `main` verde, com deploy solicitado | [run 39521021341](https://github.com/joaosanli/rota-vital-threads/actions/runs/39521021341) · [PR #1](https://github.com/joaosanli/rota-vital-threads/pull/1) |
+| Aplicação pública saudável (`{"status":"UP"}`) | [`docs/evidencias/04-render-health.png`](docs/evidencias/04-render-health.png) |
+
+O `mvn verify` dentro do Dockerfile não substitui a esteira: ele só garante que a imagem não é construída com testes unitários quebrados.
+
+## Decisões técnicas e justificativas
+
+| Decisão | Escolha | Alternativas consideradas | Justificativa |
+| --- | --- | --- | --- |
+| Linguagem | Java 21 + Spring Boot 3.5 | Python / Node.js | Preserva a tecnologia e os algoritmos existentes do PI. |
+| Base do build | `maven:3.9-eclipse-temurin-21` | JDK isolado + Maven Wrapper | Maven já pronto para compilar e executar testes, sem instalação local. |
+| Base da execução | `eclipse-temurin:21-jre-noble` | Imagem com JDK completo / Alpine | JRE sem compilador reduz componentes de runtime; Debian/Ubuntu favorece compatibilidade com Java e `curl`. |
+| Multi-stage | Build Maven separado do JRE | Dockerfile de estágio único | Leva à imagem final somente o JAR e dependências de runtime, sem Maven e testes. |
+| Banco | PostgreSQL 16 Alpine | MySQL / H2 / MongoDB | Banco relacional com driver JDBC nativo; volume persistente e imagem compacta. |
+| Dados | Volume nomeado `postgres_data` | Bind mount / banco efêmero | Preserva o histórico após `docker compose down` e independe do diretório do host. |
+| Rede | Rede `interna` do Compose, hostname `db` | `localhost` / IP fixo | DNS do Compose resolve `db`; só a API publica a porta, isolando o PostgreSQL. |
+| Ordem/saúde | `depends_on: service_healthy` + pg_isready + Actuator | `depends_on` simples / sleep fixo | A API só inicia após banco pronto, e os healthchecks detectam falhas reais. |
+| Configuração | `.env` local + `.env.example` rastreado | Senha no Java/Compose | Centraliza variáveis sem publicar credenciais; a senha é obrigatória no Compose. |
+| Persistência de metadados | Spring JDBC + `schema.sql` | JPA / Flyway | Implementação pequena para E1, sem introduzir ORM; evoluir migrations na próxima etapa. |
+| Testes | `mvn clean verify` no build + testes de integração na esteira | Build sem testes | Interrompe o build se os testes falharem; testes com PostgreSQL rodam no CI. |
+| CI/CD | GitHub Actions + Render (Deploy Hook) | Jenkins / deploy manual | Repositório já está no GitHub; Render executa o Dockerfile e oferece PostgreSQL gerenciado sem administrar VM. |
+
+## Evidências da E1
+
+As capturas abaixo foram fornecidas pelo grupo após a execução local no Windows/PowerShell (20/10/2026), e não são imagens simuladas:
+
+| Evidência | Arquivo | O que demonstra |
+| --- | --- | --- |
+| Docker Compose | [`docs/evidencias/01-compose-ps.png`](docs/evidencias/01-compose-ps.png) | Os serviços `api` e `db` foram criados e iniciados. **A captura foi feita durante a inicialização da API**, portanto não demonstra `api (healthy)`; produzir print complementar com ambos saudáveis. |
+| Endpoint de saúde | [`docs/evidencias/02-api-health.png`](docs/evidencias/02-api-health.png) | Resposta `{"status":"UP"}` da API em `localhost:8080`. |
+| Recriação e persistência | [`docs/evidencias/03-persistencia.png`](docs/evidencias/03-persistencia.png) | Comandos `docker compose down` e `docker compose up -d`, seguidos da consulta ao histórico; os registros anteriores permanecem disponíveis no PostgreSQL. |
+
+Também foi observada a resposta de `GET /api/historico/geracoes` com dois registros (`id` 1 e 2) relativos a 1.000 requisições, 1.000 hospitais, 30 insumos e `seed=42`. Um registro indicou `jaEstavaEmCache=false` e o outro `true`. Isso comprova a consulta ao histórico persistido; não comprova a durabilidade dos snapshots completos, que continuam em memória por decisão arquitetural.
+
+**Validação complementar:** `docs/evidencias/testes-green.log` registra a execução local dos testes unitários e HTTP com PostgreSQL, e `docs/evidencias/tdd-red.log` registra os novos testes antes da correção. Essas saídas locais não substituem prints da aplicação ou runs do GitHub Actions. A URL e as execuções públicas estão listadas acima.
 
 ## Uso de IA
 
-Declaração conforme a PO-CESAR-021.
+**Ferramenta:** ChatGPT (OpenAI). **Declaração:** a IA foi utilizada como apoio para
+analisar os critérios da E1, rascunhar o Dockerfile multi-stage, o `compose.yaml`,
+a integração mínima de metadados com PostgreSQL, o README e a apresentação.
 
-* **Ferramenta:** Claude (Anthropic), via Claude Code.
-* **Finalidade:** apoio para montar o projeto SAM, rodar os comandos dos experimentos, investigar dois problemas (o body em base64 do `generate-event` e o `warm_containers = "EAGER"` que já vem no `samconfig.toml`), escrever os testes unitários e o script dos prints, e revisar a redação do README e a conta de custo.
-* **Como validei:** rodei todos os comandos e conferi as saídas guardadas em `evidencias/`. Confirmei a causa do erro de JSON abrindo `events/pedido.json` (`isBase64Encoded: true`). Confirmei a do contador lendo o `samconfig.toml` e repetindo o experimento com as linhas comentadas. Refiz a conta de custo à mão e conferi o limite de 15 minutos e os preços na documentação da AWS (cotas e preços do Lambda). Os testes unitários passam.
+**Validação humana:** o grupo executou o Compose no Windows, consultou a API e registrou evidências de persistência. As execuções públicas estão na seção de evidências da esteira.
+
+## Continuidade do PI original
+
+O código de cruzamento, os testes de Threads II, o script `scripts/benchmark.py`, os
+gráficos e o relatório original foram preservados. Para os benchmarks de grande porte,
+verifique os limites de CPU/RAM do Docker Desktop e evite requisições simultâneas grandes.
+
+## Complemento E2/E3
+
+Veja [story map, testes, TDD, esteira, deploy e rollback](docs/ENTREGAS_E2_E3.md).
+
+### Prompts principais desta sessão
+
+- “estude esse projeto e me diga como rodar”
+- “roda tudo ai”
+- “analise o que foi pedido pelo professor [...] veja se o codigo está cumprindo o necessário”
+- “faça todos os ajustes de codigo que estao faltando”
+- “a entrega de hoje é tudo que continha no print”
+
+A assistência de IA acrescentou validações, testes, automação e documentação. Testes locais e logs são verificáveis; revisão e apresentação pelos integrantes continuam necessárias. Os testes originais não são atribuídos retroativamente a TDD.
+
+### Esteira publicada
+
+[Execuções do GitHub Actions](https://github.com/joaosanli/rota-vital-threads/actions). A primeira execução na `main` (run 39519030464) falhou por falta do secret do deploy; após configurar o Render, a [run 39519205682](https://github.com/joaosanli/rota-vital-threads/actions/runs/39519205682) ficou verde.
+
+
+## Planejamento da remodelagem — Unidade II, Parte 2
+
+[Diagramas, planilha, ADRs e cenário de aceite](docs/arquitetura/README.md).
+
+[Planejamento da Parte 2 (PDF)](docs/arquitetura/Rota-Vital-Planejamento-U2.pdf) · [Slides (PowerPoint)](docs/arquitetura/Rota-Vital-Slides-U2.pptx).

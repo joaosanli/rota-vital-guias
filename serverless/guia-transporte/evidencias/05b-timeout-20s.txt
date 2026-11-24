@@ -1,0 +1,7 @@
+8:    Timeout: 20
+$ sam build
+Build Succeeded
+--- 15:52:32 ---
+$ curl -X POST http://127.0.0.1:3000/guias -H "Content-Type: application/json" -d '{"requisicaoId":"R-003","demorar":true}'
+{"guia":"G-R-003","requisicaoId":"R-003","hospital":null,"fornecedorId":"HEMOPE","insumoId":"O-NEG","quantidade":1,"bolsas":[],"coletaInicio":"2026-11-24T19:52:50.496272997Z","coletaFim":"2026-11-24T21:52:50.496272997Z","estado":"PREPARADO","invocacaoNesteAmbiente":1}
+HTTP 201 em 18.449396s

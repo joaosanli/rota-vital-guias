@@ -1,0 +1,28 @@
+=== Invocação 1 (15:45:54) ===
+$ sam local invoke -e events/pedido.json
+No current session found, using default AWS::AccountId
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image was not found.
+Removing rapid images for repo public.ecr.aws/sam/emulation-java21
+Building image.............................................................................................................................................................................................
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: 8d7482608df6f4421d2e6775aef3822e7bb1e763e597a272ff2162db509c7b7f
+START RequestId: b0aa40d0-1acf-456f-89c8-bbb4e6d23af6 Version: $LATEST
+Function 'GuiaTransporteFunction' timed out after 3 seconds
+No response from invoke container for GuiaTransporteFunction
+Tempo total (relógio): 56.056 s
+
+=== Invocação 2 (15:46:50) ===
+$ sam local invoke -e events/pedido.json
+No current session found, using default AWS::AccountId
+Invoking br.com.rotavital.serverless.GuiaTransporteHandler::handleRequest (java21)
+Local image is up-to-date
+Using local image: public.ecr.aws/lambda/java:21-rapid-x86_64.
+Mounting C:\Users\User\Documents\rota-vital-threads-main\serverless\guia-transporte\.aws-sam\build\GuiaTransporteFunction as /var/task:ro,delegated, inside runtime container
+SAM_CONTAINER_ID: 7533f7a0fb735aa2abc31e121e11ba27aafbd236f58f4daf945693a4a409e5ed
+START RequestId: ca15a385-8930-42b0-a65e-fd54785ea190 Version: $LATEST
+Function 'GuiaTransporteFunction' timed out after 3 seconds
+No response from invoke container for GuiaTransporteFunction
+Tempo total (relógio): 25.968 s
+

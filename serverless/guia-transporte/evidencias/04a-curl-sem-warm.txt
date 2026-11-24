@@ -1,0 +1,13 @@
+$ sam local start-api
+--- Chamada 1 (15:50:18) ---
+$ curl -X POST http://127.0.0.1:3000/guias -H "Content-Type: application/json" -d '{"requisicaoId":"R-002","hospital":"H-Caruaru","quantidade":2}'
+{"guia":"G-R-002","requisicaoId":"R-002","hospital":"H-Caruaru","fornecedorId":"HEMOPE","insumoId":"O-NEG","quantidade":2,"bolsas":[],"coletaInicio":"2026-11-24T19:50:24.848163182Z","coletaFim":"2026-11-24T21:50:24.848163182Z","estado":"PREPARADO","invocacaoNesteAmbiente":1}
+HTTP 201 em 6.986455s
+--- Chamada 2 (15:50:25) ---
+$ curl -X POST http://127.0.0.1:3000/guias -H "Content-Type: application/json" -d '{"requisicaoId":"R-002","hospital":"H-Caruaru","quantidade":2}'
+{"guia":"G-R-002","requisicaoId":"R-002","hospital":"H-Caruaru","fornecedorId":"HEMOPE","insumoId":"O-NEG","quantidade":2,"bolsas":[],"coletaInicio":"2026-11-24T19:50:30.348433677Z","coletaFim":"2026-11-24T21:50:30.348433677Z","estado":"PREPARADO","invocacaoNesteAmbiente":1}
+HTTP 201 em 5.241065s
+--- Chamada 3 (15:50:31) ---
+$ curl -X POST http://127.0.0.1:3000/guias -H "Content-Type: application/json" -d '{"requisicaoId":"R-002","hospital":"H-Caruaru","quantidade":2}'
+{"guia":"G-R-002","requisicaoId":"R-002","hospital":"H-Caruaru","fornecedorId":"HEMOPE","insumoId":"O-NEG","quantidade":2,"bolsas":[],"coletaInicio":"2026-11-24T19:50:36.618816068Z","coletaFim":"2026-11-24T21:50:36.618816068Z","estado":"PREPARADO","invocacaoNesteAmbiente":1}
+HTTP 201 em 6.237343s
