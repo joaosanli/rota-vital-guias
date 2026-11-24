@@ -20,6 +20,7 @@ Função HTTP serverless (AWS SAM local, Java 21) que recebe uma requisição do
 devolve a guia de transporte. Ela reaproveita o domínio de **Expedição** deste projeto
 (`PrepararTransferencia`, `PlanoTransferencia`, `JanelaColeta`) sem depender do Spring.
 Código, como rodar, evidências e respostas: [`serverless/guia-transporte/README.md`](serverless/guia-transporte/README.md).
+Vídeo: https://drive.google.com/file/d/1_D8iFEhsEbcBjtZwveR0W7KCKmEacUUJ/view?usp=sharing
 
 ## Integrantes
 

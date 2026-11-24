@@ -206,7 +206,7 @@ Os `.txt` em `evidencias/` são a saída real dos comandos, capturada no Git Bas
 | `05b-*` | timeout de 20 s: 201 em ~14 s |
 | `06-testes-unitarios` | testes da função |
 
-Vídeo (até 3 min): _link do vídeo aqui_
+Vídeo (até 3 min): https://drive.google.com/file/d/1_D8iFEhsEbcBjtZwveR0W7KCKmEacUUJ/view?usp=sharing
 
 ## Uso de IA
 
