@@ -131,7 +131,7 @@ estágio do Dockerfile. Para rodar apenas os testes, com JDK 21 disponível:
 | E2 | TDD demonstrado para as validações novas | Story map, testes unitários + HTTP/PostgreSQL, ciclo TDD red → green; ver [docs/ENTREGAS_E2_E3.md](docs/ENTREGAS_E2_E3.md) |
 | E3 | Solicitação de deploy demonstrada | Workflow `ci.yml` (Testes → Imagem → Deploy) + Render via Deploy Hook |
 
-**Fluxo:** push/PR → job *Testes* (Maven + PostgreSQL de serviço) → job *Imagem* (`docker build`) → job *Solicitar deploy* (somente `push` na `main`, ambiente `production`, secret `RENDER_DEPLOY_HOOK_URL`). Com qualquer teste vermelho, imagem e deploy nem iniciam. O Auto Deploy do Render fica desligado; só a esteira libera o deploy.
+**Fluxo:** push/PR → job *Testes* (Maven + PostgreSQL de serviço) → job *Imagem* (`docker build`) → job *Solicitar deploy* (somente `push` na `main`, ambiente `production`). Com `RENDER_DEPLOY_HOOK_URL` configurado, a esteira solicita o deploy; sem o secret, registra um aviso e pula a solicitação. Com qualquer teste vermelho, imagem e deploy nem iniciam. O Auto Deploy do Render fica desligado; só a esteira libera o deploy.
 
 **Repositório do grupo:** https://github.com/joaosanli/rota-vital-threads  
 **URL pública:** https://rota-vital-api-udun.onrender.com — health: https://rota-vital-api-udun.onrender.com/actuator/health

@@ -59,12 +59,16 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    env:
+      DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      COMMIT_SHA: ${{ github.sha }}
     steps:
-      - name: Publicar o commit validado
-        env:
-          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-          COMMIT_SHA: ${{ github.sha }}
+      - name: Pular deploy sem hook configurado
+        if: env.DEPLOY_HOOK == ''
         run: |
-          test -n "$DEPLOY_HOOK" || { echo 'Configure RENDER_DEPLOY_HOOK_URL no ambiente production'; exit 1; }
+          echo "::warning::Deploy ignorado: configure RENDER_DEPLOY_HOOK_URL no ambiente production."
+      - name: Publicar o commit validado
+        if: env.DEPLOY_HOOK != ''
+        run: |
           curl --connect-timeout 15 --max-time 90 --fail --silent --show-error --get "$DEPLOY_HOOK" --data-urlencode "ref=$COMMIT_SHA" --output /tmp/deploy.json
           echo 'Solicitação aceita pelo provedor. Confirme o término no painel Render.'
