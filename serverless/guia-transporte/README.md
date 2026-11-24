@@ -147,21 +147,21 @@ Como o Timeout base passou a ser 10 s, adaptei o experimento: com `demorar: true
 
 **1. Por que a primeira invocação demorou mais que a segunda? O que acontece na fase de Init?**
 
-Na primeira invocação não existe ambiente pronto, então a plataforma precisa criar um do zero (*cold start*). Na fase de **Init**, o Lambda: (1) cria o ambiente isolado (na AWS é uma microVM Firecracker; aqui é um container Docker); (2) baixa e monta o código (o jar/zip com as classes e bibliotecas); (3) inicia o runtime, que no Java é **subir a JVM**; (4) roda a inicialização estática da classe do handler, que aqui cria o `ObjectMapper` do Jackson, o repositório em memória e o `PrepararTransferencia`. Só depois vem o **Invoke**, que chama o `handleRequest`. Se o ambiente fica quente, a próxima chamada pula tudo isso.
+Porque na primeira vez não tinha nenhum ambiente pronto, então tudo teve que ser criado do zero. Isso é o cold start. Na fase de Init o Lambda cria o ambiente (na AWS é uma microVM, aqui no SAM é um container do Docker), carrega o código, sobe o runtime e roda o que está fora do handler. No meu caso, subir o runtime é subir a JVM, e o que está fora do handler são os campos `static`: o `ObjectMapper`, o repositório em memória e o `PrepararTransferencia`. Só depois disso ele chama o `handleRequest`. Quando o ambiente já está quente, ele pula essa parte toda.
 
-Em Java isso fica bem visível. No meu teste com LAZY, a 1ª chamada levou 3,5 s de `Duration` e as seguintes de 3 a 6 ms, porque a JVM ainda precisa carregar e compilar (JIT) as classes na primeira vez. Com Timeout de 3 s, a função nem conseguia terminar o cold start. Já no `sam local invoke` as duas medições deram parecido (2,9 s e 2,4 s), porque esse comando sempre cria um container novo: as duas foram frias. Na AWS de verdade dá para reduzir isso com SnapStart (para Java), concorrência provisionada ou deixando o pacote menor.
+Com Java isso ficou bem claro. Com o LAZY, a primeira chamada deu uns 3,5 s de `Duration` e as outras deram entre 3 e 6 ms. Me surpreendeu que com o Timeout de 3 s do enunciado a função nem respondia, porque só a JVM subindo já passava disso. No `sam local invoke` as duas vezes deram quase o mesmo tempo (2,9 s e 2,4 s), e no começo achei estranho. Depois entendi que esse comando cria um container novo toda vez, então as duas foram frias.
 
 **2. O que o campo `invocacaoNesteAmbiente` mostrou com e sem `--warm-containers`? O que isso diz sobre guardar estado numa variável global?**
 
-Sem warm containers foi sempre **1**: cada requisição caiu num ambiente novo, e o `static int contador` foi recriado com 0. Com `--warm-containers LAZY` foi **1, 2, 3**, porque o mesmo ambiente atendeu as três chamadas e o campo estático sobreviveu.
+Sem warm containers deu 1 nas três chamadas, porque cada requisição caiu num container novo e o `contador` começou do zero de novo. Com `--warm-containers LAZY` deu 1, 2, 3, porque foi o mesmo container que atendeu as três.
 
-Conclusão: variável global (campo `static`) **não guarda estado de forma confiável**. Ela só vive enquanto a plataforma resolve manter aquele ambiente, e em produção várias cópias rodam em paralelo, cada uma com o seu contador. No meu handler isso vale também para o repositório de planos em memória. O `PrepararTransferencia` é idempotente por `tentativaId` (a ADR 0002 do projeto pede isso para comandos repetidos), mas essa idempotência só funciona se a repetição cair no mesmo ambiente. Para valer de verdade, o plano teria que ser gravado fora da função (no PostgreSQL do projeto, no DynamoDB etc.). A global serve para **cache** do que é caro criar e pode ser refeito, como o `ObjectMapper` e as conexões.
+Então não dá para confiar em variável global para guardar estado. Ela só continua existindo se a plataforma reaproveitar o ambiente, e ninguém garante isso. Na nuvem ainda podem ter várias cópias da função rodando ao mesmo tempo, cada uma com seu contador. No meu código o mesmo vale para os planos que ficam em memória: se o mesmo pedido chegar num container diferente, ele não sabe que a guia já foi gerada. Se fosse para valer, teria que salvar num banco (tipo o PostgreSQL que o projeto já usa). A variável global serve mais para guardar coisas que demoram para criar, como o `ObjectMapper`.
 
 **3. O que aconteceu com `demorar = true`? Qual é o tempo máximo de uma execução no Lambda, e o que fazer com um trabalho mais longo?**
 
-Com Timeout de 10 s e a função dormindo 12 s, a execução foi interrompida (`timed out after 10 seconds`), o cliente recebeu **HTTP 502** e a guia não foi gerada. Com Timeout de 20 s, a mesma chamada respondeu 201 em ~14 s. (Com o Timeout de 3 s do enunciado, até a chamada normal estourava, por causa do cold start do Java.)
+Com Timeout de 10 s e a função dormindo 12 s, o SAM matou a execução (`timed out after 10 seconds`), o curl recebeu 502 e a guia não foi gerada. Quando aumentei para 20 s e rodei o `sam build` de novo, a mesma chamada voltou 201 depois de uns 14 s. Precisei mudar os tempos do enunciado (3 s e 5 s) porque em Java até a chamada normal estourava 3 s.
 
-O máximo no Lambda é **900 segundos (15 minutos)**. Para um trabalho maior que isso, ou que não precisa segurar o cliente esperando, dá para: quebrar em partes menores e processar de forma assíncrona com fila (SQS), em que cada mensagem é uma execução curta; orquestrar as etapas com **Step Functions** (encaixa com a saga da ADR 0002: reservar estoque, preparar expedição e compensar em caso de falha); ou rodar num container sem esse limite (**ECS/Fargate**, **AWS Batch**), como a API Spring do projeto, que já roda em container. Também ajuda responder logo (202 Accepted) e avisar quando terminar.
+O máximo no Lambda é 15 minutos (900 s). Se o trabalho for mais longo que isso, a ideia é não fazer tudo numa função só: dá para dividir em partes menores e mandar por uma fila (SQS), usar o Step Functions para encadear os passos, ou rodar num container normal, que não tem esse limite, como a nossa API Spring.
 
 **4. Quanto custa um milhão de execuções com 128 MB e 100 ms (us-east-1)?**
 
@@ -176,15 +176,15 @@ Computação:   128 MB = 128 / 1024 GB                       = 0,125 GB
 Total:        US$ 0,20 + US$ 0,2083                        ≈ US$ 0,41
 ```
 
-Um milhão de guias custaria cerca de **41 centavos de dólar**, e ainda caberia na faixa gratuita (1 milhão de requisições e 400 mil GB-s por mês).
+Dá uns 41 centavos de dólar para um milhão de execuções, o que é bem barato. E ainda ficaria dentro da faixa gratuita (1 milhão de requisições e 400 mil GB-s por mês).
 
-Comparando com a minha função em Java (512 MB): quente ela leva ~5 ms, ou seja, 0,5 GB × 0,005 s × 1.000.000 = 2.500 GB-s ≈ US$ 0,04, mais US$ 0,20 de requisições ≈ **US$ 0,24**. Mas cada cold start custa ~3 s × 0,5 GB = 1,5 GB-s. Se 1% das chamadas fossem frias, seriam mais 15.000 GB-s ≈ US$ 0,25. Em Java, o cold start pesa no custo além de pesar no tempo de resposta.
+Por curiosidade, fiz a conta com a minha função de verdade, que usa 512 MB. Quente ela leva uns 5 ms: 0,5 GB × 0,005 s × 1.000.000 = 2.500 GB-s, uns US$ 0,04, mais os US$ 0,20 das requisições. Mas cada cold start gasta uns 3 s, então se muitas chamadas forem frias o custo sobe bastante.
 
 **5. Em que parte do Rota Vital uma função assim faria sentido, e em qual não faria?**
 
-*Faz sentido* em tarefas curtas, sem estado e disparadas por evento, com tráfego irregular. A principal é justamente a desta atividade: quando a **Alocação confirma** a requisição (`ConfirmarAlocacao` chama o `PreparoDeExpedicao`), gerar a guia de transporte / plano de transferência. Outras: avisar o hospital e o fornecedor (e-mail, SMS) com a janela de coleta, gerar o PDF/QR code da guia e registrar a entrega. Uma emergência pode gerar várias requisições de uma vez e depois ficar horas sem nada. Escalar sozinho e pagar por execução encaixa bem.
+Faz sentido justamente na parte desta atividade: depois que a alocação é confirmada, gerar a guia de transporte. É uma tarefa rápida, que acontece de vez em quando (às vezes várias de uma vez numa emergência e depois nada por horas), então pagar só quando roda e escalar sozinho combina. Também serviria para mandar aviso para o hospital e o fornecedor com a janela de coleta, ou gerar o PDF da guia.
 
-*Não faz sentido* no **motor de cruzamento**, que é o coração do PI de threads. Ele compara sequencial, threads de plataforma e threads virtuais sobre snapshots grandes **em memória**, e depende de uma JVM quente e de vida longa para os benchmarks serem justos. Cold start, limite de memória e limite de 15 minutos distorceriam as medições, e o "cache" em memória sumiria quando o ambiente fosse reciclado. Também não faz sentido na **reserva de estoque**, que precisa de consistência e da saga com compensação da ADR 0002, nem na API principal com pool de conexões no PostgreSQL e tráfego contínuo. Essas ficam melhor no container Spring que o projeto já tem (Docker Compose / Render).
+Não faria sentido no motor de cruzamento, que é a parte de threads do nosso PI. Ele trabalha com muitos dados em memória e a gente compara tempos de sequencial, threads de plataforma e threads virtuais. Com cold start, limite de memória e o container sendo descartado, os resultados não iam ser confiáveis. Também não colocaria a reserva de estoque nem a API principal, que conversa o tempo todo com o PostgreSQL. Essas partes ficam melhor no container Spring que a gente já tem rodando.
 
 ## Testes
 
